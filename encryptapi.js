@@ -23,10 +23,11 @@ app.post('/access', (req, res) => {
 
             const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
             const encrypted = Buffer.concat([cipher.update(password), cipher.final()]);
-            return {
+            const encryptedString = JSON.stringify({
                 iv: iv.toString('hex'),
                 content: encrypted.toString('hex')
-            };
+            });
+            return Buffer.from(encryptedString).toString("base64")
         };
 
         const encryptedText = encrypt(password);
@@ -38,15 +39,16 @@ app.post('/access', (req, res) => {
 })
 
 app.post('/decrypt', (req, res) => {
-    const body = req.body;
+    var body = req.body;
     if (Object.keys(req.body).length === 0) {
         res.status(400).send("Request body is empty");
     } else {
 
         const decrypt = (body) => { //Decrypted function
-
-            const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(body.iv, 'hex'));
-            const decrpyted = Buffer.concat([decipher.update(Buffer.from(body.content, 'hex')), decipher.final()]);
+            const data = JSON.stringify(body.PASSWORD);
+            const decode = Buffer.from(data,"base64").toString('utf-8');
+            const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(JSON.parse(decode).iv, 'hex'));
+            const decrpyted = Buffer.concat([decipher.update(Buffer.from(JSON.parse(decode).content, 'hex')), decipher.final()]);
             return decrpyted.toString();
         };
 
@@ -57,7 +59,7 @@ app.post('/decrypt', (req, res) => {
 
 })
 
-app.listen(8082, () => {
-    console.log('Server is started on 127.0.0.1:8082')
+app.listen(9082, () => {
+    console.log('Server is started on 127.0.0.1:9082')
 
 })
